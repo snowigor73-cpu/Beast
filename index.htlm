@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mode Beast">
+<meta name="theme-color" content="#0a0a0a">
+<title>Mode Beast 🔥</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #141414;
+    --border: #1e1e1e;
+    --orange: #ff6b00;
+    --green: #4ade80;
+    --blue: #7b9cff;
+    --yellow: #c8ff00;
+    --red: #ff6b6b;
+    --purple: #c084fc;
+    --text: #e8e8e8;
+    --muted: #555;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    height: calc(44px + var(--safe-top));
+    padding-top: var(--safe-top);
+    background: var(--bg);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 8px;
+  }
+  .app-name { font-size: 17px; font-weight: 700; color: var(--orange); letter-spacing: -0.3px; }
+  .live-time { font-size: 17px; font-weight: 600; color: var(--text); }
+
+  /* NAV TABS */
+  .nav {
+    display: flex;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: none;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+  /* PAGES */
+  .page { display: none; padding: 0 0 120px; }
+  .page.active { display: block; }
+
+  /* TODAY HEADER */
+  .today-header {
+    padding: 20px 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .today-title { font-size: 22px; font-weight: 800; color: var(--text); }
+  .today-date { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .next-badge {
+    background: var(--orange);
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 99px;
+    text-align: center;
+  }
+  .next-badge-sub { font-size: 9px; font-weight: 600; opacity: 0.7; }
+
+  /* CURRENT SLOT BANNER */
+  .current-banner {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, #1a0800, #2a1000);
+    border: 1px solid var(--orange);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .cb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); margin-bottom: 6px; }
+  .cb-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .cb-sub { font-size: 12px; color: #aa6600; margin-top: 4px; }
+  .cb-progress { margin-top: 12px; }
+  .cb-bar-wrap { background: #1a1a1a; border-radius: 99px; height: 4px; margin-top: 6px; }
+  .cb-bar { height: 100%; background: var(--orange); border-radius: 99px; transition: width 0.5s; }
+  .cb-times { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* TIMELINE */
+  .timeline { padding: 0 16px; }
+  .slot {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .slot-time {
+    width: 46px;
+    min-width: 46px;
+    text-align: right;
+    padding-top: 13px;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .slot-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 14px;
+    min-width: 14px;
+  }
+  .slot-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-top: 16px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .slot.current .slot-dot { transform: scale(1.5); box-shadow: 0 0 8px currentColor; }
+  .slot-vline { width: 2px; flex: 1; min-height: 6px; background: var(--border); margin-top: 2px; }
+  .slot-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 11px 13px;
+    border: 1px solid transparent;
+    margin-bottom: 0;
+    transition: opacity 0.3s;
+  }
+  .slot.past .slot-card { opacity: 0.35; }
+  .slot.current .slot-card { border-width: 1.5px !important; }
+  .slot-title { font-size: 14px; font-weight: 600; }
+  .slot-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .slot-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-top: 5px; }
+
+  /* Colors per category */
+  .cat-wake   { background:#0f1500; border-color:#1e2a00; } .cat-wake .slot-dot   { background:#c8ff00; } .cat-wake .slot-tag { background:#1e2a00; color:#c8ff00; }
+  .cat-eat    { background:#150800; border-color:#2a1200; } .cat-eat .slot-dot    { background:#fb923c; } .cat-eat .slot-tag { background:#2a1200; color:#fb923c; }
+  .cat-alt    { background:#08081a; border-color:#10102a; } .cat-alt .slot-dot    { background:#7b9cff; } .cat-alt .slot-tag { background:#10102a; color:#7b9cff; }
+  .cat-moto   { background:#15100a; border-color:#2a1a10; } .cat-moto .slot-dot   { background:#f4a261; } .cat-moto .slot-tag { background:#2a1a10; color:#f4a261; }
+  .cat-foot   { background:#001500; border-color:#002500; } .cat-foot .slot-dot   { background:#4ade80; } .cat-foot .slot-tag { background:#002500; color:#4ade80; }
+  .cat-gym    { background:#150500; border-color:#2a0800; } .cat-gym .slot-dot    { background:#ff6b00; } .cat-gym .slot-tag { background:#2a0800; color:#ff6b00; }
+  .cat-admin  { background:#150a0a; border-color:#2a1010; } .cat-admin .slot-dot  { background:#ff6b6b; } .cat-admin .slot-tag { background:#2a1010; color:#ff6b6b; }
+  .cat-perso  { background:#0f0f1a; border-color:#1a1a2a; } .cat-perso .slot-dot  { background:#c084fc; } .cat-perso .slot-tag { background:#1a1a2a; color:#c084fc; }
+  .cat-sleep  { background:#0a0a10; border-color:#111; } .cat-sleep .slot-dot  { background:#1f2937; } .cat-sleep .slot-title { color: #444; }
+  .cat-libre  { background:#111; border-color:#1a1a1a; } .cat-libre .slot-dot  { background:#2a2a2a; } .cat-libre .slot-title { color: #555; }
+
+  /* DAY SELECTOR */
+  .day-selector {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 20px;
+  }
+  .day-selector::-webkit-scrollbar { display: none; }
+  .day-btn {
+    flex: none;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .day-btn.active { background: var(--orange); color: #000; border-color: var(--orange); }
+  .day-btn.today-marker { border-color: var(--orange); color: var(--orange); }
+
+  /* ALARM PAGE */
+  .alarm-section { padding: 16px; }
+  .alarm-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .alarm-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+  .alarm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .alarm-left { display: flex; align-items: center; gap: 12px; }
+  .alarm-icon { font-size: 20px; }
+  .alarm-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .alarm-time-text { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .alarm-time-badge { font-size: 16px; font-weight: 700; color: var(--orange); }
+
+  /* TOGGLE */
+  .toggle {
+    width: 44px; height: 26px;
+    background: #222;
+    border-radius: 99px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--orange); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* INSTALL BANNER */
+  .install-banner {
+    margin: 0 16px 16px;
+    background: #0a1500;
+    border: 1px solid #1a3000;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ib-icon { font-size: 24px; }
+  .ib-text { flex: 1; }
+  .ib-title { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ib-sub { font-size: 11px; color: #666; margin-top: 2px; line-height: 1.4; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding-bottom: var(--safe-bottom);
+  }
+  .bn-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.15s;
+    gap: 4px;
+  }
+  .bn-item.active { color: var(--orange); }
+  .bn-icon { font-size: 22px; }
+
+  /* STATS PAGE */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .stat-card-val { font-size: 28px; font-weight: 800; }
+  .stat-card-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-card-input {
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--orange);
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+  }
+
+  /* Section header */
+  .section-hdr {
+    padding: 20px 16px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: calc(60px + var(--safe-top));
+    left: 16px; right: 16px;
+    background: var(--orange);
+    color: #000;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 999;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="app-name">🔥 Mode Beast</div>
+  <div class="live-time" id="liveTime">00:00</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bn-item active" onclick="switchPage('today', this)">
+    <div class="bn-icon">⚡</div>Aujourd'hui
+  </div>
+  <div class="bn-item" onclick="switchPage('schedule', this)">
+    <div class="bn-icon">📅</div>Planning
+  </div>
+  <div class="bn-item" onclick="switchPage('alarms', this)">
+    <div class="bn-icon">🔔</div>Alarmes
+  </div>
+  <div class="bn-item" onclick="switchPage('stats', this)">
+    <div class="bn-icon">📊</div>Suivi
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PAGE: TODAY -->
+<div class="page active" id="page-today">
+  <div class="today-header">
+    <div>
+      <div class="today-title" id="todayTitle">Lundi</div>
+      <div class="today-date" id="todayDate">—</div>
+    </div>
+    <div class="next-badge" id="nextBadge">
+      <div id="nextLabel">Prochain</div>
+      <div id="nextTime" style="font-size:16px;font-weight:800">—</div>
+      <div class="next-badge-sub" id="nextName">—</div>
+    </div>
+  </div>
+
+  <div class="current-banner" id="currentBanner">
+    <div class="cb-label">⚡ En cours maintenant</div>
+    <div class="cb-title" id="currentTitle">—</div>
+    <div class="cb-sub" id="currentSub">—</div>
+    <div class="cb-progress">
+      <div class="cb-times">
+        <span id="cbStart">—</span>
+        <span id="cbEnd">—</span>
+      </div>
+      <div class="cb-bar-wrap"><div class="cb-bar" id="cbBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="timeline" id="todayTimeline"></div>
+</div>
+
+<!-- PAGE: SCHEDULE (full week) -->
+<div class="page" id="page-schedule">
+  <div class="section-hdr">Semaine type</div>
+  <div class="day-selector" id="daySelectorSchedule"></div>
+  <div class="timeline" id="scheduleTimeline"></div>
+</div>
+
+<!-- PAGE: ALARMS -->
+<div class="page" id="page-alarms">
+  <div class="alarm-section">
+    <div class="alarm-title">🔔 Alarmes automatiques</div>
+    <div class="alarm-sub">Active les alarmes pour être notifié à chaque créneau. L'app doit rester ouverte sur iPhone.</div>
+
+    <div class="install-banner">
+      <div class="ib-icon">📲</div>
+      <div class="ib-text">
+        <div class="ib-title">Installer sur l'écran d'accueil</div>
+        <div class="ib-sub">Safari → icône partage ↗ → "Sur l'écran d'accueil". Ouvre l'app depuis là pour les alarmes.</div>
+      </div>
+    </div>
+
+    <div id="alarmList"></div>
+  </div>
+</div>
+
+<!-- PAGE: STATS -->
+<div class="page" id="page-stats">
+  <div class="section-hdr">Mon suivi — Mode Beast</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div style="color:var(--orange)">⚖️</div>
+      <input class="stat-card-input" id="statPoids" type="number" step="0.1" placeholder="88" style="color:var(--orange)" oninput="saveStat('poids', this.value)">
+      <div class="stat-card-label">Poids actuel (kg)</div>
+    </div>
+    <div class="stat-card">
+      <div style="color:var(--green)">🎯</div>
+      <div class="stat-card-val" style="color:var(--green)">76</div>
+      <div class="stat-card-label">Objectif (kg)</div>
+    </div>
+    <div class="stat-card">
+      <div style="color:var(--blue)">🏢</div>
+      <input class="stat-card-input" id="statEntreprises" type="number" placeholder="0" style="color:var(--blue)" oninput="saveStat('entreprises', this.value)">
+      <div class="stat-card-label">Entreprises contactées</div>
+    </div>
+    <div class="stat-card">
+      <div style="color:var(--yellow)">🏍️</div>
+      <input class="stat-card-input" id="statCode" type="number" placeholder="0" style="color:var(--yellow)" oninput="saveStat('code', this.value)">
+      <div class="stat-card-label">Score code moto /40</div>
+    </div>
+  </div>
+
+  <div class="section-hdr">Progression sèche</div>
+  <div style="padding: 0 16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:13px;color:var(--muted)">Poids actuel</span>
+        <span style="font-size:13px;color:var(--muted)">Objectif</span>
+      </div>
+      <div style="background:#1a1a1a;border-radius:99px;height:8px;overflow:hidden">
+        <div id="secheBar" style="height:100%;background:linear-gradient(90deg,#ff6b00,#c8ff00);border-radius:99px;transition:width 0.5s;width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <span style="font-size:11px;color:var(--muted)" id="sechePoidsLabel">—</span>
+        <span style="font-size:11px;color:var(--muted)">76 kg</span>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:22px;font-weight:800;color:var(--orange)" id="secheRestant">— kg à perdre</div>
+    </div>
+  </div>
+
+  <div style="padding:16px;margin-top:8px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">📅 Semaines restantes</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="weeksGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const DAYS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const DAY_KEYS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+
+const SCHEDULE = {
+  lundi: [
+    { time: '08:30', end: '09:30', title: '☀️ Réveil + Petit déjeuner', sub: 'Flocons d\'avoine, œufs, fruit — dès le réveil', cat: 'wake', tag: 'Nutrition' },
+    { time: '09:30', end: '11:00', title: '📋 Recherche entreprises', sub: 'Lister 10 entreprises plomberie/chauffage sur Toulouse', cat: 'alt', tag: 'Alternance' },
+    { time: '11:00', end: '13:00', title: '🚶 Prospection terrain', sub: '3-5 entreprises en physique — CV + LM imprimés', cat: 'alt', tag: 'Alternance' },
+    { time: '13:00', end: '14:00', title: '🏍️ Code moto — 45 min', sub: 'iPermis ou Rousseau Moto', cat: 'moto', tag: 'Code moto' },
+    { time: '14:00', end: '15:00', title: '⚽ Terrain — technique + sprints', sub: 'Jonglerie → passes mur → dribbles → 10×30m sprints', cat: 'foot', tag: 'Football' },
+    { time: '15:00', end: '18:30', title: 'Récup + démarches', sub: 'Réponses mails, appels, temps libre', cat: 'libre', tag: '' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Viande/poisson + légumes + riz ou patate douce', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Temps perso / appart', sub: 'Aménagement, projets, détente', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — PUSH', sub: 'Pecs, épaules, triceps — programme complet', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '08:30', title: '😴 Dodo — 7h minimum', sub: 'Récupération musculaire essentielle', cat: 'sleep', tag: '' },
+  ],
+  mardi: [
+    { time: '09:00', end: '10:00', title: '☀️ Réveil + Petit déjeuner', sub: 'Récupération après séance push', cat: 'wake', tag: 'Nutrition' },
+    { time: '10:00', end: '12:00', title: '📂 Admin — Carte grise + Voiture', sub: 'Appeler vendeur, RDV contrôle technique, réparations', cat: 'admin', tag: 'Admin' },
+    { time: '12:00', end: '13:00', title: '🏍️ Code moto — 45 min', sub: 'Focus sur les thèmes ratés', cat: 'moto', tag: 'Code moto' },
+    { time: '13:00', end: '18:30', title: 'Récup active + perso', sub: 'Marche 30 min, étirements, projets perso', cat: 'libre', tag: '' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Protéines + légumes + féculents', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Perso / appart', sub: 'Bricolage, aménagement, projets', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — PULL', sub: 'Dos, biceps, épaules arrière', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '09:00', title: '😴 Dodo — 7h minimum', sub: '', cat: 'sleep', tag: '' },
+  ],
+  mercredi: [
+    { time: '08:30', end: '09:30', title: '☀️ Réveil + Petit déjeuner', sub: 'Grosse journée — bien se préparer', cat: 'wake', tag: 'Nutrition' },
+    { time: '09:30', end: '11:00', title: '📧 Envoi mails + relances', sub: 'CV + LM par mail. Relancer lundi par téléphone.', cat: 'alt', tag: 'Alternance' },
+    { time: '11:00', end: '13:00', title: '🚶 Prospection terrain', sub: '3-5 nouvelles entreprises en physique', cat: 'alt', tag: 'Alternance' },
+    { time: '13:00', end: '14:00', title: '🏍️ Examen blanc code', sub: 'Série complète 40 questions — noter le score', cat: 'moto', tag: 'Code moto' },
+    { time: '14:00', end: '15:00', title: '⚽ Terrain — endurance + frappe', sub: 'Footing 20 min → frappes 10 min → récup', cat: 'foot', tag: 'Football' },
+    { time: '15:00', end: '18:30', title: 'Récupération', sub: 'Étirements, hydratation, repos avant gym', cat: 'libre', tag: '' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Plus de glucides ce soir — séance legs à venir', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Perso', sub: 'Détente avant la séance', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — LEGS 🦵', sub: 'Squat, presse, fentes, curl ischio, mollets', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '08:30', title: '😴 Dodo — récup jambes', sub: '', cat: 'sleep', tag: '' },
+  ],
+  jeudi: [
+    { time: '09:00', end: '10:00', title: '☀️ Réveil + Petit déjeuner', sub: 'Récup jambes — bien manger', cat: 'wake', tag: 'Nutrition' },
+    { time: '10:00', end: '12:00', title: '📂 Admin divers', sub: 'Carte grise ANTS, visite médicale, voiture', cat: 'admin', tag: 'Admin' },
+    { time: '12:00', end: '13:00', title: '🏍️ Code moto — 45 min', sub: 'Comportement + environnement', cat: 'moto', tag: 'Code moto' },
+    { time: '13:00', end: '18:30', title: 'Récup + projets perso', sub: 'Étirements, marche, business Nino...', cat: 'libre', tag: '' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Repas complet avant full body', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Perso', sub: 'Temps libre, détente', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — FULL BODY', sub: 'Cardio HIIT + gainage + explosivité foot', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '09:00', title: '😴 Dodo', sub: '', cat: 'sleep', tag: '' },
+  ],
+  vendredi: [
+    { time: '08:30', end: '09:30', title: '☀️ Réveil + Petit déjeuner', sub: 'Dernière journée de prospection', cat: 'wake', tag: 'Nutrition' },
+    { time: '09:30', end: '11:00', title: '📞 Relances téléphoniques', sub: '"Bonjour, je suis Aboubacar, je suis passé cette semaine..."', cat: 'alt', tag: 'Alternance' },
+    { time: '11:00', end: '13:00', title: '🚶 Prospection terrain', sub: 'Objectif : 15 entreprises contactées cette semaine', cat: 'alt', tag: 'Alternance' },
+    { time: '13:00', end: '14:30', title: '⚽ Terrain — intervalles intensifs', sub: 'Échauffement → 8×200m à 80% → technique balle', cat: 'foot', tag: 'Football' },
+    { time: '14:30', end: '15:00', title: '📊 Bilan de la semaine', sub: 'Entreprises ? Score code ? Poids ? Carte grise ?', cat: 'wake', tag: 'Bilan' },
+    { time: '15:00', end: '18:30', title: 'Soirée libre', sub: 'Tu l\'as mérité', cat: 'libre', tag: '' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Un peu plus libre — fin de semaine', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Soirée sortie', sub: 'Amis, détente', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — PUSH (2ème)', sub: 'Intensité max — deuxième séance push', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '08:30', title: '😴 Dodo', sub: '', cat: 'sleep', tag: '' },
+  ],
+  samedi: [
+    { time: '09:30', end: '11:00', title: '☀️ Réveil + Petit déjeuner', sub: 'Grand déjeuner — grosse séance terrain', cat: 'wake', tag: 'Nutrition' },
+    { time: '11:00', end: '12:30', title: '⚽ Grosse séance terrain — 1h15', sub: 'Footing → ateliers techniques → jeu libre → étirements', cat: 'foot', tag: 'Football' },
+    { time: '12:30', end: '18:30', title: '🚗 Voiture + temps libre', sub: 'Réparations voiture + temps pour toi', cat: 'admin', tag: 'Admin' },
+    { time: '18:30', end: '20:00', title: '🍽️ Repas principal', sub: 'Repas plaisir — rester propre quand même', cat: 'eat', tag: 'Nutrition' },
+    { time: '20:00', end: '00:00', title: '🏠 Soirée libre', sub: 'Recharge les batteries', cat: 'perso', tag: 'Perso' },
+    { time: '00:00', end: '02:00', title: '🏋️ GYM — PULL (2ème)', sub: 'Dos, biceps — deuxième séance pull', cat: 'gym', tag: 'Gym' },
+    { time: '02:00', end: '09:30', title: '😴 Dodo', sub: '', cat: 'sleep', tag: '' },
+  ],
+  dimanche: [
+    { time: '10:00', end: '11:00', title: '☀️ Réveil tranquille', sub: 'Pas de réveil forcé — récupération', cat: 'wake', tag: 'Récup' },
+    { time: '11:00', end: '12:00', title: '🍳 Brunch', sub: 'Œufs, avocat, fromage blanc, fruits', cat: 'eat', tag: 'Nutrition' },
+    { time: '12:00', end: '17:00', title: 'Journée libre totale', sub: 'Famille, amis, balade, foot en détendu', cat: 'libre', tag: '' },
+    { time: '17:00', end: '18:00', title: '⚽ Étirements + mobilité', sub: '30 min — hanches, ischio, mollets, cheville', cat: 'foot', tag: 'Football' },
+    { time: '18:00', end: '18:30', title: '📋 Préparation semaine', sub: '3 priorités, CV à imprimer, entreprises à cibler', cat: 'wake', tag: 'Organisation' },
+    { time: '18:30', end: '23:00', title: '🍽️ Repas + soirée calme', sub: 'Repas léger — pas de séance ce soir', cat: 'eat', tag: 'Nutrition' },
+    { time: '23:00', end: '10:00', title: '😴 Dodo — pas de sport', sub: 'Récup complète — tu repars à fond lundi', cat: 'sleep', tag: '' },
+  ],
+};
+
+// Alarmes à afficher et activer
+const ALARMS = [
+  { id: 'reveil',     name: '☀️ Réveil + Petit déj', time: '08:30', days: ['lundi','mercredi','vendredi'] },
+  { id: 'reveil2',    name: '☀️ Réveil', time: '09:00', days: ['mardi','jeudi'] },
+  { id: 'prospecte',  name: '🚶 Prospection départ', time: '11:00', days: ['lundi','mercredi','vendredi'] },
+  { id: 'codemoto',   name: '🏍️ Code moto', time: '13:00', days: ['lundi','mardi','mercredi','jeudi'] },
+  { id: 'terrain',    name: '⚽ Séance terrain', time: '14:00', days: ['lundi','mercredi','vendredi'] },
+  { id: 'repas',      name: '🍽️ Repas principal', time: '18:30', days: ['lundi','mardi','mercredi','jeudi','vendredi','samedi'] },
+  { id: 'gym',        name: '🏋️ C\'est l\'heure du GYM', time: '00:00', days: ['lundi','mardi','mercredi','jeudi','vendredi','samedi'] },
+  { id: 'dodo',       name: '😴 Dodo — pose ton téléphone', time: '02:00', days: ['lundi','mardi','mercredi','jeudi','vendredi','samedi'] },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let alarmStates = JSON.parse(localStorage.getItem('alarmStates') || '{}');
+let alarmTimers = {};
+let currentScheduleDay = null;
+let stats = JSON.parse(localStorage.getItem('beastStats') || '{}');
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function timeToMins(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function now24() {
+  const n = new Date();
+  return n.getHours() * 60 + n.getMinutes();
+}
+
+function formatTime(t) { return t; }
+
+function todayKey() {
+  return DAY_KEYS[new Date().getDay()];
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── RENDER SLOT ─────────────────────────────────────────────────────────────
+function renderSlot(slot, nowMins, isToday) {
+  const startMins = timeToMins(slot.time);
+  let endMins = timeToMins(slot.end);
+  if (endMins <= startMins) endMins += 24 * 60;
+
+  let state = '';
+  if (isToday) {
+    if (nowMins < startMins) state = 'upcoming';
+    else if (nowMins >= startMins && nowMins < endMins) state = 'current';
+    else state = 'past';
+  }
+
+  return `<div class="slot ${state}">
+    <div class="slot-time">${slot.time}</div>
+    <div class="slot-line">
+      <div class="slot-dot cat-${slot.cat}" style="color:${dotColor(slot.cat)}"></div>
+      <div class="slot-vline"></div>
+    </div>
+    <div class="slot-card cat-${slot.cat}">
+      <div class="slot-title">${slot.title}</div>
+      ${slot.sub ? `<div class="slot-sub">${slot.sub}</div>` : ''}
+      ${slot.tag ? `<span class="slot-tag cat-${slot.cat}">${slot.tag}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function dotColor(cat) {
+  const c = {wake:'#c8ff00',eat:'#fb923c',alt:'#7b9cff',moto:'#f4a261',foot:'#4ade80',gym:'#ff6b00',admin:'#ff6b6b',perso:'#c084fc',sleep:'#1f2937',libre:'#2a2a2a'};
+  return c[cat] || '#555';
+}
+
+// ─── TODAY PAGE ───────────────────────────────────────────────────────────────
+function renderToday() {
+  const key = todayKey();
+  const slots = SCHEDULE[key] || [];
+  const nowMins = now24();
+  const now = new Date();
+
+  document.getElementById('todayTitle').textContent = DAYS[now.getDay()];
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // Current + next
+  let currentSlot = null, nextSlot = null;
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    const startMins = timeToMins(s.time);
+    let endMins = timeToMins(s.end);
+    if (endMins <= startMins) endMins += 24 * 60;
+    if (nowMins >= startMins && nowMins < endMins) {
+      currentSlot = { ...s, startMins, endMins };
+      nextSlot = slots[i + 1] || null;
+    }
+  }
+
+  if (currentSlot) {
+    document.getElementById('currentTitle').textContent = currentSlot.title;
+    document.getElementById('currentSub').textContent = currentSlot.sub || '';
+    document.getElementById('cbStart').textContent = currentSlot.time;
+    document.getElementById('cbEnd').textContent = currentSlot.end;
+    const prog = ((nowMins - currentSlot.startMins) / (currentSlot.endMins - currentSlot.startMins)) * 100;
+    document.getElementById('cbBar').style.width = Math.min(100, prog) + '%';
+  } else {
+    document.getElementById('currentTitle').textContent = 'Aucun créneau actif';
+    document.getElementById('currentSub').textContent = 'Regarde le planning complet';
+    document.getElementById('cbBar').style.width = '0%';
+  }
+
+  if (nextSlot) {
+    document.getElementById('nextLabel').textContent = 'Prochain';
+    document.getElementById('nextTime').textContent = nextSlot.time;
+    document.getElementById('nextName').textContent = nextSlot.title.replace(/^[^\s]+\s/, '').substring(0, 18);
+  }
+
+  // Timeline
+  document.getElementById('todayTimeline').innerHTML = slots.map(s => renderSlot(s, nowMins, true)).join('');
+}
+
+// ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
+function renderSchedulePage(key) {
+  currentScheduleDay = key;
+  const slots = SCHEDULE[key] || [];
+  document.getElementById('scheduleTimeline').innerHTML = slots.map(s => renderSlot(s, -1, false)).join('');
+
+  document.querySelectorAll('.day-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.day === key);
+  });
+}
+
+function buildDaySelector() {
+  const todayIdx = new Date().getDay();
+  const sel = document.getElementById('daySelectorSchedule');
+  sel.innerHTML = DAY_KEYS.map((k, i) => {
+    const isToday = i === todayIdx;
+    return `<div class="day-btn ${isToday ? 'today-marker' : ''}" data-day="${k}" onclick="renderSchedulePage('${k}')">${DAYS[i].substring(0,3)}${isToday ? ' ·' : ''}</div>`;
+  }).join('');
+}
+
+// ─── ALARMS ──────────────────────────────────────────────────────────────────
+function renderAlarms() {
+  const list = document.getElementById('alarmList');
+  list.innerHTML = ALARMS.map(a => {
+    const on = alarmStates[a.id] !== false;
+    return `<div class="alarm-item">
+      <div class="alarm-left">
+        <div class="alarm-icon">${a.name.split(' ')[0]}</div>
+        <div>
+          <div class="alarm-name">${a.name.substring(a.name.indexOf(' ')+1)}</div>
+          <div class="alarm-time-text">${a.days.map(d => d.substring(0,3)).join(' · ')}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="alarm-time-badge">${a.time}</div>
+        <div class="toggle ${on ? 'on' : ''}" onclick="toggleAlarm('${a.id}', this)"></div>
+      </div>
+    </div>`;
+  }).join('');
+  scheduleAlarms();
+}
+
+function toggleAlarm(id, el) {
+  alarmStates[id] = !el.classList.contains('on');
+  el.classList.toggle('on');
+  localStorage.setItem('alarmStates', JSON.stringify(alarmStates));
+  scheduleAlarms();
+  showToast(alarmStates[id] ? '🔔 Alarme activée' : '🔕 Alarme désactivée');
+}
+
+function scheduleAlarms() {
+  Object.values(alarmTimers).forEach(clearTimeout);
+  alarmTimers = {};
+
+  const todayKey_ = todayKey();
+  const now = new Date();
+  const nowMins = now24();
+
+  ALARMS.forEach(a => {
+    if (alarmStates[a.id] === false) return;
+    if (!a.days.includes(todayKey_)) return;
+
+    const alarmMins = timeToMins(a.time);
+    let diffMs;
+    if (alarmMins > nowMins) {
+      diffMs = (alarmMins - nowMins) * 60 * 1000;
+    } else {
+      return; // passé
+    }
+
+    alarmTimers[a.id] = setTimeout(() => {
+      triggerAlarm(a);
+    }, diffMs);
+  });
+}
+
+function triggerAlarm(a) {
+  // Sound via AudioContext
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3, 0.6].forEach(offset => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.4);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.4);
+    });
+  } catch(e) {}
+
+  // Vibration
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+
+  // Banner
+  showToast(`⏰ ${a.name}`);
+
+  // Switch to today page
+  switchPage('today', document.querySelector('.bn-item'));
+}
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function renderStats() {
+  if (stats.poids) document.getElementById('statPoids').value = stats.poids;
+  if (stats.entreprises) document.getElementById('statEntreprises').value = stats.entreprises;
+  if (stats.code) document.getElementById('statCode').value = stats.code;
+
+  updateSecheBar();
+  renderWeeks();
+}
+
+function saveStat(key, val) {
+  stats[key] = parseFloat(val) || 0;
+  localStorage.setItem('beastStats', JSON.stringify(stats));
+  if (key === 'poids') updateSecheBar();
+}
+
+function updateSecheBar() {
+  const poids = stats.poids || 88;
+  const obj = 76;
+  const start = 88;
+  const restant = Math.max(0, poids - obj);
+  const prog = Math.max(0, Math.min(100, ((start - poids) / (start - obj)) * 100));
+  document.getElementById('secheBar').style.width = prog + '%';
+  document.getElementById('sechePoidsLabel').textContent = poids + ' kg';
+  document.getElementById('secheRestant').textContent = restant.toFixed(1) + ' kg à perdre';
+}
+
+function renderWeeks() {
+  const grid = document.getElementById('weeksGrid');
+  const weeks = ['S1','S2','S3','S4','S5','S6','S7'];
+  const currentWeek = stats.currentWeek || 1;
+  grid.innerHTML = weeks.map((w, i) => {
+    const done = i + 1 < currentWeek;
+    const active = i + 1 === currentWeek;
+    return `<div onclick="setWeek(${i+1})" style="
+      padding: 8px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: ${done ? '#002a00' : active ? 'var(--orange)' : '#1a1a1a'};
+      color: ${done ? '#4ade80' : active ? '#000' : '#444'};
+      border: 1px solid ${done ? '#004400' : active ? 'var(--orange)' : '#222'};
+    ">${w} ${done ? '✓' : ''}</div>`;
+  }).join('');
+}
+
+function setWeek(w) {
+  stats.currentWeek = w;
+  localStorage.setItem('beastStats', JSON.stringify(stats));
+  renderWeeks();
+  showToast(`📅 Semaine ${w} activée`);
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function switchPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+
+  if (id === 'today') renderToday();
+  if (id === 'schedule') { buildDaySelector(); renderSchedulePage(currentScheduleDay || todayKey()); }
+  if (id === 'alarms') renderAlarms();
+  if (id === 'stats') renderStats();
+}
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('liveTime').textContent = `${h}:${m}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updateClock();
+setInterval(updateClock, 10000);
+setInterval(() => {
+  if (document.getElementById('page-today').classList.contains('active')) renderToday();
+  scheduleAlarms();
+}, 60000);
+
+renderToday();
+buildDaySelector();
+renderAlarms();
+
+// Service Worker pour PWA
+if ('serviceWorker' in navigator) {
+  const sw = `
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => clients.claim());
+    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response(''))));
+  `;
+  const blob = new Blob([sw], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+</script>
+</body>
+</html>
